@@ -9,11 +9,11 @@ namespace exercise.main.Inventory
 {
     public interface ICatalog
     {
-        bool Has(string sku);
+        bool ProductExists(string sku);
         CatalogItem Get(string sku);
         IEnumerable<CatalogItem> GetByType(ProductType type, bool onlyInStock = true);
         IEnumerable<CatalogItem> GetSoldOutByType(ProductType type);
-        IProduct CreateProduct(string sku); // makes a concrete Bagel/Coffee/Filling
+        IProduct CreateProduct(string sku); 
         decimal GetPrice(string sku);
     }
 }

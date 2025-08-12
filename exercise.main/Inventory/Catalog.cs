@@ -35,32 +35,87 @@ namespace exercise.main.Inventory
             };
         }
 
-        public bool Has(string sku) => _items.ContainsKey(sku);
+        public bool ProductExists(string sku)
+        {
+            return _items.ContainsKey(sku);
+        }
 
-        public CatalogItem Get(string sku) =>
-            _items.TryGetValue(sku, out var item) ? item
-            : throw new KeyNotFoundException($"SKU '{sku}' not found.");
+        public CatalogItem Get(string sku)
+        {
+            CatalogItem item;
+            if (_items.TryGetValue(sku, out item))
+            {
+                return item;
+            }
+            return null;
+        }
 
-        public IEnumerable<CatalogItem> GetByType(ProductType type, bool onlyInStock = true) =>
-            _items.Values.Where(i => i.Type == type && (!onlyInStock || i.InStock));
+        // Returns all items of a specific type, optionally filtering out those that are not in stock.
+        public IEnumerable<CatalogItem> GetByType(ProductType type, bool onlyInStock = true)
+        {
+            var result = new List<CatalogItem>();
 
-        public IEnumerable<CatalogItem> GetSoldOutByType(ProductType type) =>
-            _items.Values.Where(i => i.Type == type && !i.InStock);
+            foreach (var i in _items.Values)
+            {
+                if (i.Type == type)
+                {
+                    if (onlyInStock && !i.InStock)
+                    {
+                        continue;
+                    }
+                    result.Add(i);
+                }
+            }
 
+            return result;
+        }
+
+        // Returns all sold-out items of a specific type.
+        public IEnumerable<CatalogItem> GetSoldOutByType(ProductType type)
+        {
+            var result = new List<CatalogItem>();
+
+            foreach (var i in _items.Values)
+            {
+                if (i.Type == type && !i.InStock)
+                {
+                    result.Add(i);
+                }
+            }
+
+            return result;
+        }
+
+        // Creates a product instance based on the SKU.
+        // Returns null if the SKU doesn't exist, the item is out of stock, or the type is unsupported.
         public IProduct CreateProduct(string sku)
         {
-            var i = Get(sku);
-            if (!i.InStock) throw new InvalidOperationException($"{i.Name} - {i.Variant} is out of stock.");
+            if (!_items.TryGetValue(sku, out var item))
+            {
+                // SKU not found
+                return null;
+            }
+
+            // Not in stock
+            if (!item.InStock)
+            {
+                return null;
+            }
+
+            // Unique id in case of multible of the same sku 
             var id = _nextId++;
 
-            return i.Type switch
-            {
-                ProductType.Bagel => new Bagel(id, i.Sku, i.Variant, i.Price),
-                ProductType.Coffee => new Coffee(id, i.Sku, i.Variant, i.Price),
-                ProductType.Filling => new Filling(id, i.Sku, i.Variant, i.Price),
-                _ => throw new NotSupportedException($"Unsupported type for SKU '{i.Sku}'.")
-            };
+            // Create the correct product type
+            if (item.Type == ProductType.Bagel)
+                return new Bagel(id, item.Sku, item.Variant, item.Price);
+            if (item.Type == ProductType.Coffee)
+                return new Coffee(id, item.Sku, item.Variant, item.Price);
+            if (item.Type == ProductType.Filling)
+                return new Filling(id, item.Sku, item.Variant, item.Price);
+
+            return null;
         }
+
 
         public decimal GetPrice(string sku) => Get(sku).Price;
     }

@@ -42,7 +42,7 @@ namespace exercise.main
                     continue;
                 }
 
-                // change menu
+                // Change your order menu
                 while (true)
                 {
                     Console.WriteLine("\nDo you want to change anything in your basket?");
@@ -67,13 +67,13 @@ namespace exercise.main
                     else if (change == "2")
                     {
                         if (!RemoveByPrintedNumber(basket))
-                            continue; // invalid number -> message already shown
+                            continue;
                     }
                     else if (change == "3") break;
                     else Console.WriteLine("Invalid choice.");
                 }
 
-                // summary and exit
+                // Summary and exit
                 PrintBasketIndented(basket);
                 Console.WriteLine($"\nYour total is: ${basket.TotalPrice:0.00}\n");
                 Console.WriteLine("Thank you for your order!");
@@ -81,7 +81,7 @@ namespace exercise.main
             }
         }
 
-        // ---------- flows ----------
+        // Adds a bagel with optional fillings to the basket
         private static void AddBagelWithFillings(ICatalog catalog, Basket basket)
         {
             var bagel = PickOne(catalog, ProductType.Bagel, "Which bagel would you like?");
@@ -97,6 +97,7 @@ namespace exercise.main
                 : $"\nYou have ordered a {bagel.Variant.ToLower()} bagel with {FormatList(chosenFillings.Select(x => x.Variant))}.");
         }
 
+        // Adds a coffee to the basket
         private static void AddCoffee(ICatalog catalog, Basket basket)
         {
             var coffee = PickOne(catalog, ProductType.Coffee, "Which coffee would you like?");
@@ -106,24 +107,26 @@ namespace exercise.main
             Console.WriteLine($"\nYou have added {coffee.Variant.ToLower()} coffee.");
         }
 
-        // ---------- pickers ----------
+        // pick one item from the printed catalog
         private static CatalogItem? PickOne(ICatalog catalog, ProductType type, string title)
         {
-            var avail = catalog.GetByType(type, onlyInStock: true).ToList();
-            var sold = catalog.GetSoldOutByType(type).ToList();
+            var ItemsInStock = catalog.GetByType(type, onlyInStock: true).ToList();
+            var ItemsOutOfStock = catalog.GetSoldOutByType(type).ToList();
 
             Console.WriteLine($"\n{title}");
-            for (int i = 0; i < avail.Count; i++) Console.WriteLine($"{i + 1}. {avail[i].Variant} — ${avail[i].Price:0.00}");
-            if (sold.Count > 0) Console.WriteLine($"\nWe are unfortunately out of stock for: {string.Join(", ", sold.Select(x => x.Variant))}");
+            for (int i = 0; i < ItemsInStock.Count; i++) Console.WriteLine($"{i + 1}. {ItemsInStock[i].Variant} — ${ItemsInStock[i].Price:0.00}");
+            if (ItemsOutOfStock.Count > 0) Console.WriteLine($"\nWe are unfortunately out of stock for: {string.Join(", ", ItemsOutOfStock.Select(x => x.Variant))}");
             Console.Write("Enter number: ");
 
-            int idx = ReadIndex(avail.Count);
-            return avail[idx];
+            int idx = ReadIndex(ItemsInStock.Count);
+            return ItemsInStock[idx];
         }
 
+        // Pick one or more fillings for the bagel, returns a list of CatalogItems
         private static List<CatalogItem> PickFillings(ICatalog catalog, string bagelVariant)
         {
             var fills = catalog.GetByType(ProductType.Filling, onlyInStock: true).ToList();
+
             Console.WriteLine($"\nWhat would you like on your {bagelVariant.ToLower()} bagel?");
             for (int i = 0; i < fills.Count; i++) Console.WriteLine($"{i + 1}. {fills[i].Variant} — ${fills[i].Price:0.00}");
             Console.WriteLine($"{fills.Count + 1}. No fillings");
@@ -132,6 +135,7 @@ namespace exercise.main
             var input = (Console.ReadLine() ?? "").Trim();
             if (int.TryParse(input, out var single) && single == fills.Count + 1) return new();
 
+            // Check if there are more than one filling selected
             var chosen = new List<CatalogItem>();
             foreach (var p in input.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 if (int.TryParse(p, out var n) && n >= 1 && n <= fills.Count)
@@ -140,7 +144,7 @@ namespace exercise.main
             return chosen;
         }
 
-        // ---------- basket UI ----------
+        // Printing out the basket with indentation for fillings
         private static void PrintBasketIndented(Basket basket)
         {
             Console.WriteLine("\nYour basket:");
@@ -180,7 +184,6 @@ namespace exercise.main
             Console.Write("Enter number to remove: ");
             var raw = (Console.ReadLine() ?? "").Trim();
 
-            // foreach-based validation (ok per your preference)
             var found = false; int choice;
             if (int.TryParse(raw, out choice))
             {
@@ -207,6 +210,7 @@ namespace exercise.main
             return true;
         }
 
+        // Reads the input and ensuring it is valid based on the choices available.
         private static int ReadIndex(int max)
         {
             while (true)
@@ -217,6 +221,7 @@ namespace exercise.main
             }
         }
 
+        // Formats the list of items for output depending on how many items there are.
         private static string FormatList(IEnumerable<string> items)
         {
             var list = items.Select(s => s.ToLower()).ToList();
