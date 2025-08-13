@@ -33,7 +33,7 @@ namespace exercise.main
             }
         }
 
-        // NEW: add by SKU with in-stock check (uses Catalog)
+        // add by SKU with in-stock check 
         public string AddProduct(ICatalog catalog, string sku)
         {
             if (catalog == null) return "no catalog";
